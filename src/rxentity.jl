@@ -136,8 +136,14 @@ function create_entity(entity, state_space, active_or_passive, real_time_factor:
 end
 
 function Base.:(==)(a::RxEntity, b::RxEntity)
-    return a.decorated == b.decorated
+    return a === b
 end
+
+# Entities are unique wrappers with their own actuator/sensor sets. Equality and
+# hashing must be identity-based so that two distinct entities (even ones wrapping
+# `==`-equal decorated objects) are never conflated in `in`/`∈`/Dict-keyed routing.
+Base.isequal(a::RxEntity, b::RxEntity) = a === b
+Base.hash(a::RxEntity, h::UInt) = hash(objectid(a), h)
 
 function Base.show(io::IO, entity::RxEntity{T,ContinuousEntity,E} where {T,E})
     print(io, "Continuous RxEntity{", typeof(decorated(entity)), "}")
