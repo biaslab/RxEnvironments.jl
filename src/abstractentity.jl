@@ -99,6 +99,12 @@ function Rocket.unsubscribe!(emitter::AbstractEntity, receiver::AbstractEntity)
     Rocket.unsubscribe!(sensors(receiver)[emitter])
     delete!(sensors(receiver), emitter)
     delete!(actuators(emitter), receiver)
+    # A discrete receiver buffers one observation per emitted source and only
+    # forwards once *all* sources have contributed. Drop the removed emitter's
+    # slot so the removed emitter can no longer block future observations.
+    if receiver isa AbstractEntity{T,DiscreteEntity} where {T}
+        delete!(observations(receiver).buffer, emitter)
+    end
 end
 
 function Rocket.unsubscribe!(
